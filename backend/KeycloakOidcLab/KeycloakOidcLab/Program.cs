@@ -8,6 +8,8 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddJwtAuthentication();
 
+builder.Services.AddAuthorization();
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -22,6 +24,7 @@ var app = builder.Build();
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
+
 
 app.MapGet("/api/me", (ClaimsPrincipal user) =>
 {
@@ -43,4 +46,4 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.Run("http://localhost:5000");
+app.Run();

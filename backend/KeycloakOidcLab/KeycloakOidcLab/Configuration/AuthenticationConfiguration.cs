@@ -11,13 +11,13 @@ public static class AuthenticationConfiguration
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
-                options.Authority = "http://localhost:8080/realms/vistra";
+                options.Authority = "http://localhost:8080/realms/oidc-lab";
                 options.RequireHttpsMetadata = false; // TODO pesquisar flag
 
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
-                    ValidIssuer = "http://localhost:8080/realms/vistra",
+                    ValidIssuer = "http://localhost:8080/realms/oidc-lab",
                     ValidateAudience = true,
                     ValidAudience = "account",
                     ValidateLifetime = true
