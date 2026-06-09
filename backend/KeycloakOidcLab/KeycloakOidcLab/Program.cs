@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using KeycloakOidcLab.Configuration;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,23 +8,28 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddJwtAuthentication();
 
-builder.Services.AddAuthorization();
-
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
         policy.WithOrigins("http://localhost:5173")
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+}
 
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseHttpsRedirection();
 
 app.MapGet("/api/me", (ClaimsPrincipal user) =>
 {
@@ -37,13 +42,20 @@ app.MapGet("/api/me", (ClaimsPrincipal user) =>
         Email = email,
         Claims = user.Claims.Select(c => new { c.Type, c.Value })
     });
-}).RequireAuthorization();;
+}).RequireAuthorization();
 
-if (app.Environment.IsDevelopment())
+app.MapGet("/login-bff", () =>
 {
-    app.MapOpenApi();
-}
+    return Results.Challenge(
+        properties: new AuthenticationProperties { RedirectUri = "http://localhost:5173" },
+        authenticationSchemes: new[] { AuthenticationConfiguration.BffOidcScheme }
+    );
+});
 
-app.UseHttpsRedirection();
+app.MapGet("/logout-bff", async (HttpContext context) =>
+{
+    await context.SignOutAsync(AuthenticationConfiguration.BffOidcScheme);
+    return Results.Redirect("http://localhost:5173");
+});
 
 app.Run();
